@@ -6,7 +6,7 @@
 
 ### Storytelling técnico
 
-Sistemas de recomendação raramente são só um modelo isolado. Em produção, eles precisam de uma esteira que materialize interações, transforme esses sinais em estruturas reutilizáveis, gere recomendações e publique artefatos de forma reexecutável. Em ecossistemas como Kubeflow, essa esteira vira uma DAG orquestrada em Kubernetes, com componentes independentes e contratos explícitos.
+Sistemas de recomendação raramente são só um modelo isolado. Em produção, eles dependem de uma esteira que materialize interações, transforme esses sinais em estruturas reutilizáveis, gere recomendações em lote ou online e publique artefatos de forma observável e reexecutável. Em ecossistemas como Kubeflow, essa esteira vira uma DAG orquestrada em Kubernetes, com componentes independentes, contratos explícitos e lineage entre datasets, matrizes intermediárias e saídas finais.
 
 Este projeto foi desenhado para mostrar essa lógica de forma local e reproduzível. A implementação usa uma abordagem simples de similaridade usuário-usuário, mas organiza o fluxo como um pipeline real:
 
@@ -17,13 +17,44 @@ Este projeto foi desenhado para mostrar essa lógica de forma local e reproduzí
 - geração batch de recomendações;
 - registro dos resultados.
 
+### Como pensar um pipeline de recomendação com Kubeflow
+
+Em um desenho mais próximo de produção, Kubeflow entra para resolver quatro problemas importantes:
+
+- separar responsabilidades por componente;
+- permitir reexecução parcial de etapas;
+- tornar artefatos intermediários visíveis e reutilizáveis;
+- preparar o pipeline para escalar em ambiente Kubernetes.
+
+Este MVP simula exatamente essa mentalidade. A lógica algorítmica foi mantida propositalmente simples para que o foco do repositório fique na estrutura do workflow:
+
+- `ingest_component`
+  materializa as tabelas base;
+- `validate_component`
+  checa volume e estatísticas básicas;
+- `prepare_component`
+  transforma interações em matriz usuário-item;
+- `train_component`
+  calcula a estrutura de similaridade;
+- `recommend_component`
+  produz recomendações batch;
+- `register_component`
+  persiste o relatório consolidado.
+
 ### Componentes
 
+- [src/data_factory.py](/Users/flaviagaia/Documents/CV_FLAVIA_CODEX/recommendation-system-kubeflow/src/data_factory.py)
+  gera os datasets de usuários, itens e interações e os persiste em `data/raw/`;
 - [src/components.py](/Users/flaviagaia/Documents/CV_FLAVIA_CODEX/recommendation-system-kubeflow/src/components.py)
+  implementa os componentes lógicos do pipeline;
 - [src/pipeline_runner.py](/Users/flaviagaia/Documents/CV_FLAVIA_CODEX/recommendation-system-kubeflow/src/pipeline_runner.py)
+  executa o DAG localmente em ordem determinística;
 - [pipeline.py](/Users/flaviagaia/Documents/CV_FLAVIA_CODEX/recommendation-system-kubeflow/pipeline.py)
+  escreve a especificação declarativa da DAG estilo Kubeflow;
 - [main.py](/Users/flaviagaia/Documents/CV_FLAVIA_CODEX/recommendation-system-kubeflow/main.py)
+  runner consolidado do projeto;
 - [tests/test_pipeline.py](/Users/flaviagaia/Documents/CV_FLAVIA_CODEX/recommendation-system-kubeflow/tests/test_pipeline.py)
+  valida o contrato mínimo do pipeline.
 
 ### DAG
 
@@ -36,7 +67,30 @@ flowchart LR
     B --> F["register_component"]
     E --> F
 ```
-```
+
+### Contrato de saída
+
+O pipeline gera um relatório consolidado com:
+
+- `runtime_mode`
+- `validation`
+  estatísticas básicas do corpus de entrada;
+- `recommendations_path`
+  caminho do CSV batch com recomendações;
+- `top_recommendations`
+  amostra das recomendações geradas;
+- `report_artifact`
+- `pipeline_spec_artifact`
+
+Além disso, o projeto persiste:
+
+- `data/raw/users.csv`
+- `data/raw/items.csv`
+- `data/raw/interactions.csv`
+- `data/processed/user_item_matrix.csv`
+- `data/processed/recommendations.csv`
+- `data/processed/kubeflow_recommendation_report.json`
+- `artifacts/kubeflow_pipeline_spec.json`
 
 ### Resultados atuais
 
@@ -57,6 +111,7 @@ Exemplos de recomendações geradas:
 - O projeto usa similaridade usuário-usuário para manter a lógica do modelo simples e explicável.
 - A etapa de recomendação filtra itens já consumidos e remove scores nulos antes de montar o ranking final.
 - O foco principal do repositório é a orquestração por componentes, não a sofisticação algorítmica do recomendador.
+- O artefato `kubeflow_pipeline_spec.json` não executa Kubeflow de fato, mas documenta a DAG e ajuda a posicionar o projeto como `Kubeflow-ready`.
 
 ### Execução
 
@@ -69,6 +124,32 @@ python3 -m py_compile main.py pipeline.py src/data_factory.py src/components.py 
 ## English
 
 `recommendation-system-kubeflow` simulates a recommendation pipeline with a `Kubeflow Pipelines` mindset, separating ingestion, validation, user-item matrix preparation, training, batch recommendation, and final registration into explicit components.
+
+### Technical storytelling
+
+Recommendation systems in production are rarely just a model. They depend on a workflow that materializes interaction data, transforms those signals into reusable structures, generates recommendations, and publishes artifacts in a reproducible way. In Kubeflow-style environments, that workflow becomes a Kubernetes-orchestrated DAG with isolated components and explicit artifact flow.
+
+This project is designed to show that mindset locally. The recommendation logic itself is intentionally simple, based on user-user similarity, so the repository can emphasize orchestration structure rather than recommender sophistication.
+
+### How to think about a Kubeflow recommendation pipeline
+
+In a production-oriented design, Kubeflow helps solve four recurring problems:
+
+- component isolation;
+- partial re-execution;
+- artifact visibility and reuse;
+- portability to Kubernetes-based ML workflows.
+
+This MVP mirrors that logic through explicit local components for ingestion, validation, matrix preparation, similarity computation, batch recommendation, and registration.
+
+### Output contract
+
+- `runtime_mode`
+- `validation`
+- `recommendations_path`
+- `top_recommendations`
+- `report_artifact`
+- `pipeline_spec_artifact`
 
 ### Current results
 
