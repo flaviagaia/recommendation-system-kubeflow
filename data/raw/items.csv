@@ -1,0 +1,11 @@
+item_id,item_name,category
+I-1001,smartphone,tech
+I-1002,headphone,tech
+I-1003,blender,family
+I-1004,stroller,family
+I-1005,treadmill,fitness
+I-1006,protein_kit,fitness
+I-1007,luxury_watch,premium
+I-1008,designer_bag,premium
+I-1009,discount_bundle,budget
+I-1010,entry_phone,budget
