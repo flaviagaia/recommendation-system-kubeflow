@@ -36,6 +36,7 @@ flowchart LR
     B --> F["register_component"]
     E --> F
 ```
+```
 
 ### Resultados atuais
 
