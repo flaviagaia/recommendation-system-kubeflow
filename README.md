@@ -4,18 +4,6 @@
 
 `recommendation-system-kubeflow` é um projeto que simula um pipeline de recomendação com a mentalidade de `Kubeflow Pipelines`, separando ingestão, validação, preparação da matriz usuário-item, treino, geração de recomendações e registro final.
 
-### Storytelling técnico
-
-Sistemas de recomendação raramente são só um modelo isolado. Em produção, eles dependem de uma esteira que materialize interações, transforme esses sinais em estruturas reutilizáveis, gere recomendações em lote ou online e publique artefatos de forma observável e reexecutável. Em ecossistemas como Kubeflow, essa esteira vira uma DAG orquestrada em Kubernetes, com componentes independentes, contratos explícitos e lineage entre datasets, matrizes intermediárias e saídas finais.
-
-Este projeto foi desenhado para mostrar essa lógica de forma local e reproduzível. A implementação usa uma abordagem simples de similaridade usuário-usuário, mas organiza o fluxo como um pipeline real:
-
-- ingestão das tabelas base;
-- validação do volume e consistência;
-- preparação da matriz usuário-item;
-- cálculo da similaridade;
-- geração batch de recomendações;
-- registro dos resultados.
 
 ### Como pensar um pipeline de recomendação com Kubeflow
 
@@ -43,17 +31,17 @@ Este MVP simula exatamente essa mentalidade. A lógica algorítmica foi mantida 
 
 ### Componentes
 
-- [src/data_factory.py](/Users/flaviagaia/Documents/CV_FLAVIA_CODEX/recommendation-system-kubeflow/src/data_factory.py)
+- [src/data_factory.py](src/data_factory.py)
   gera os datasets de usuários, itens e interações e os persiste em `data/raw/`;
-- [src/components.py](/Users/flaviagaia/Documents/CV_FLAVIA_CODEX/recommendation-system-kubeflow/src/components.py)
+- [src/components.py](src/components.py)
   implementa os componentes lógicos do pipeline;
-- [src/pipeline_runner.py](/Users/flaviagaia/Documents/CV_FLAVIA_CODEX/recommendation-system-kubeflow/src/pipeline_runner.py)
+- [src/pipeline_runner.py](src/pipeline_runner.py)
   executa o DAG localmente em ordem determinística;
-- [pipeline.py](/Users/flaviagaia/Documents/CV_FLAVIA_CODEX/recommendation-system-kubeflow/pipeline.py)
+- [pipeline.py](pipeline.py)
   escreve a especificação declarativa da DAG estilo Kubeflow;
-- [main.py](/Users/flaviagaia/Documents/CV_FLAVIA_CODEX/recommendation-system-kubeflow/main.py)
+- [main.py](main.py)
   runner consolidado do projeto;
-- [tests/test_pipeline.py](/Users/flaviagaia/Documents/CV_FLAVIA_CODEX/recommendation-system-kubeflow/tests/test_pipeline.py)
+- [tests/test_pipeline.py](tests/test_pipeline.py)
   valida o contrato mínimo do pipeline.
 
 ### DAG
@@ -125,11 +113,6 @@ python3 -m py_compile main.py pipeline.py src/data_factory.py src/components.py 
 
 `recommendation-system-kubeflow` simulates a recommendation pipeline with a `Kubeflow Pipelines` mindset, separating ingestion, validation, user-item matrix preparation, training, batch recommendation, and final registration into explicit components.
 
-### Technical storytelling
-
-Recommendation systems in production are rarely just a model. They depend on a workflow that materializes interaction data, transforms those signals into reusable structures, generates recommendations, and publishes artifacts in a reproducible way. In Kubeflow-style environments, that workflow becomes a Kubernetes-orchestrated DAG with isolated components and explicit artifact flow.
-
-This project is designed to show that mindset locally. The recommendation logic itself is intentionally simple, based on user-user similarity, so the repository can emphasize orchestration structure rather than recommender sophistication.
 
 ### How to think about a Kubeflow recommendation pipeline
 
